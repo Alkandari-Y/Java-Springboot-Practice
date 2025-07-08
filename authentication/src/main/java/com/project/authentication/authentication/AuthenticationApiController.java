@@ -3,10 +3,10 @@ package com.project.authentication.authentication;
 import jakarta.validation.Valid;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -50,6 +50,21 @@ class AuthenticationApiController {
                 user.getRoles().stream().map(RoleEntity::getName).toList()
         );
         return tokenPairResponse;
+    }
+
+    @GetMapping("/validate")
+    public ValidateTokenResponse validateToken(
+            Principal principal
+    ) {
+        UserEntity user = userService.findByUserName(principal.getName());
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found");
+        }
+        return new ValidateTokenResponse(
+                user.getId(),
+                user.getRoles().stream().map(RoleEntity::getName).toList(),
+                user.getUsername()
+        );
     }
 
 }
